@@ -16,6 +16,7 @@ df['FS_time'] = pd.Series([current_time_sec]*len(df), dtype="float64")
 
 # compute the vif and drop columns greater than 1.2 threshold
 def compute_vif(df, threshold):
+    # 숫자 column만 추출
     names=['age','euribor3m','campaign','not_working', 'no_previous_contact']
     considered_features= [name for name in names if name in df.columns]
     subset=df[considered_features]  
@@ -23,10 +24,12 @@ def compute_vif(df, threshold):
     subset['intercept'] = 1
     vif = pd.DataFrame()
     vif["Variable"] = subset.columns
+    # 분산 팽창 계수 계산
     vif["VIF"] = [variance_inflation_factor(subset.values, i) for i in range(subset.shape[1])]
     vif = vif[vif['Variable']!='intercept']
     vif=vif.sort_values('VIF', ascending=False)
     print(vif)       
+    ## 다중 팽창 계수가 threshold보다 크면 해당 값 삭제
     drop_clm=vif.index[vif.VIF.gt(threshold)].tolist()
     drop_clm_names=vif.loc[drop_clm]['Variable'].tolist()
     df.drop(drop_clm_names, axis=1, inplace=True)
